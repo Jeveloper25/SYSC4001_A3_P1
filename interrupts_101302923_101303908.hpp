@@ -236,6 +236,7 @@ bool free_memory(PCB &program) {
 // Convert a list of strings into a PCB
 PCB add_process(std::vector<std::string> tokens) {
   PCB process;
+  static int priority = 1;
   process.PID = std::stoi(tokens[0]);
   process.size = std::stoi(tokens[1]);
   process.arrival_time = std::stoi(tokens[2]);
@@ -246,9 +247,10 @@ PCB add_process(std::vector<std::string> tokens) {
   process.start_time = -1;
   process.partition_number = -1;
   process.state = NOT_ASSIGNED;
-  process.priority = 1; // TEMP: Update to use tokens later
+  process.priority = priority; // Older processes get higher priority
   process.ready_time = -1;
   process.next_io = process.io_freq;
+  priority++;
 
   return process;
 }

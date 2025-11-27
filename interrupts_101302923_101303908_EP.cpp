@@ -148,29 +148,32 @@ run_simulation(std::vector<PCB> list_processes) {
                                        RUNNING);
       }
       // Check if new arrival must be processed before process IO/termination
-      if ((next < running.io_freq && next < running.remaining_time ||
-           running.io_freq == 0) &&
+      if ((next < running.next_io && next < running.remaining_time ||
+           running.next_io == 0) &&
           next > 0) {
         processing_other = true;
         current_time += next;
         running.remaining_time -= next;
+				running.next_io -= next;
         continue;
       }
       // Check if other process must be readied before process IO/termination
-      if ((ready < running.io_freq && ready < running.remaining_time ||
-           running.io_freq == 0) &&
+      if ((ready < running.next_io && ready < running.remaining_time ||
+           running.next_io == 0) &&
           ready > 0) {
         processing_other = true;
         current_time += ready;
         running.remaining_time -= ready;
+				running.next_io -= ready;
         continue;
       }
       // Run the process until IO occurs
-      if (running.io_freq < running.remaining_time && running.io_freq != 0) {
-        running.remaining_time -= running.io_freq;
-        current_time += running.io_freq;
+      if (running.next_io < running.remaining_time && running.next_io != 0) {
+        running.remaining_time -= running.next_io;
+        current_time += running.next_io;
         running.state = WAITING;
         running.ready_time = current_time + running.io_duration;
+				running.next_io = running.io_freq;
         wait_queue.push_back(running);
         sort_wait(wait_queue);
         sync_queue(job_list, running);
