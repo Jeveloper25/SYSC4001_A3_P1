@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <queue>
 #include <random>
 #include <sstream>
 #include <string>
@@ -53,10 +54,11 @@ struct PCB {
   unsigned int io_duration;
   unsigned int priority;
   unsigned int ready_time; // Records the time process will exit waiting
+  unsigned int next_io;    // Time until next IO
 };
 
 //------------------------------------HELPER FUNCTIONS FOR THE
-//SIMULATOR------------------------------
+// SIMULATOR------------------------------
 // Following function was taken from stackoverflow; helper function for
 // splitting strings
 std::vector<std::string> split_delim(std::string input, std::string delim) {
@@ -245,7 +247,8 @@ PCB add_process(std::vector<std::string> tokens) {
   process.partition_number = -1;
   process.state = NOT_ASSIGNED;
   process.priority = 1; // TEMP: Update to use tokens later
-  process.ready_time= -1;
+  process.ready_time = -1;
+  process.next_io = process.io_freq;
 
   return process;
 }
@@ -279,7 +282,15 @@ void run_process(PCB &running, std::vector<PCB> &job_queue,
   running.state = RUNNING;
   sync_queue(job_queue, running);
 }
-
+// Overloaded to use queues
+void run_process(PCB &running, std::vector<PCB> &job_queue,
+                 std::queue<PCB> &ready_queue, unsigned int current_time) {
+  running = ready_queue.front();
+  ready_queue.pop();
+  running.start_time = current_time;
+  running.state = RUNNING;
+  sync_queue(job_queue, running);
+}
 void idle_CPU(PCB &running) {
   running.start_time = 0;
   running.processing_time = 0;

@@ -8,7 +8,6 @@
 #include "interrupts_101302923_101303908.hpp"
 #include <algorithm>
 #include <iostream>
-#include <iterator>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -22,6 +21,7 @@ void FCFS(std::vector<PCB> &ready_queue) {
             });
 }
 
+// Sort ready queue based on priority level
 void prioritize(std::vector<PCB> &ready_queue) {
   std::sort(ready_queue.begin(), ready_queue.end(),
             [](const PCB &first, const PCB &second) {
@@ -29,6 +29,7 @@ void prioritize(std::vector<PCB> &ready_queue) {
             });
 }
 
+// Sorts wait queue based on ready times
 void sort_wait(std::vector<PCB> &wait_queue) {
   std::sort(wait_queue.begin(), wait_queue.end(),
             [](const PCB &first, const PCB &second) {
@@ -65,7 +66,6 @@ run_simulation(std::vector<PCB> list_processes) {
   // make the output table (the header row)
   execution_status = print_exec_header();
 
-  // std::cout << "REACHED2" << std::endl;
   // Indicates if process arrived/readied while another is running
   bool processing_other = false;
   int next_arrival_time = -1;
@@ -83,6 +83,8 @@ run_simulation(std::vector<PCB> list_processes) {
     // Go through the list of proceeses
     if (!list_processes.empty()) {
       auto &process = list_processes.back();
+      // Fast forward to next arrival if there are no ready processes and the
+      // waiting processes are further away
       if (ready_queue.empty() && !wait_queue.empty() &&
           wait_queue.back().ready_time > next_arrival_time) {
         current_time = next_arrival_time;
@@ -100,17 +102,22 @@ run_simulation(std::vector<PCB> list_processes) {
           list_processes.pop_back();
         }
       }
+      // Record the time of the next arrival
       if (!list_processes.empty()) {
         next_arrival_time = list_processes.back().arrival_time;
       }
     }
+
     ///////////////////////MANAGE WAIT QUEUE/////////////////////////
     // This mainly involves keeping track of how long a process must remain in
     // the ready queue
 
+    // Fast forward time to when the IO is complete if there are no ready
+    // processes
     if (ready_queue.empty()) {
       current_time += running.io_duration;
     }
+    // Move process to ready queue if IO has completed
     if (!wait_queue.empty() && wait_queue.back().ready_time == current_time) {
       auto &process = wait_queue.back();
       process.state = READY;
@@ -120,6 +127,7 @@ run_simulation(std::vector<PCB> list_processes) {
           print_exec_status(current_time, process.PID, WAITING, READY);
       std::cout << print_exec_status(current_time, process.PID, WAITING, READY);
     }
+    // Record the time of the next IO completion
     if (!wait_queue.empty()) {
       next_ready_time = wait_queue.back().ready_time;
     }
@@ -130,6 +138,7 @@ run_simulation(std::vector<PCB> list_processes) {
     int ready = next_ready_time - current_time;  // Time until next ready
 
     if (!ready_queue.empty()) {
+      // Run process from ready queue if none other are running
       if (!processing_other) {
         prioritize(ready_queue);
         run_process(running, job_list, ready_queue, current_time);
@@ -138,6 +147,7 @@ run_simulation(std::vector<PCB> list_processes) {
         std::cout << print_exec_status(current_time, running.PID, READY,
                                        RUNNING);
       }
+      // Check if new arrival must be processed before process IO/termination
       if ((next < running.io_freq && next < running.remaining_time ||
            running.io_freq == 0) &&
           next > 0) {
@@ -146,6 +156,7 @@ run_simulation(std::vector<PCB> list_processes) {
         running.remaining_time -= next;
         continue;
       }
+      // Check if other process must be readied before process IO/termination
       if ((ready < running.io_freq && ready < running.remaining_time ||
            running.io_freq == 0) &&
           ready > 0) {
@@ -154,6 +165,7 @@ run_simulation(std::vector<PCB> list_processes) {
         running.remaining_time -= ready;
         continue;
       }
+      // Run the process until IO occurs
       if (running.io_freq < running.remaining_time && running.io_freq != 0) {
         running.remaining_time -= running.io_freq;
         current_time += running.io_freq;
@@ -168,6 +180,7 @@ run_simulation(std::vector<PCB> list_processes) {
                                        WAITING);
         processing_other = false;
       } else {
+        // Run the process until termination
         current_time += running.remaining_time;
         execution_status +=
             print_exec_status(current_time, running.PID, RUNNING, TERMINATED);
