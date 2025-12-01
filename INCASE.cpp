@@ -55,7 +55,7 @@ std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std
 
     //Loop while till there are no ready or waiting processes.
     //This is the main reason I have job_list, you don't have to use it.
-    while(!all_process_terminated(job_list) && !job_list.empty()) {
+    while(!all_process_terminated(job_list) || job_list.empty()) {
 
         //Inside this loop, there are three things you must do:
         // 1) Populate the ready queue with processes as they arrive
@@ -111,8 +111,7 @@ std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std
             }
 
             // Determine slice: remaining in quantum, remaining CPU, next IO
-            int slice = std::min(QUANTUM - time_in_quantum,
-                     std::min(int(running.remaining_time), int(running.next_io)));
+            int slice = std::min({int(QUANTUM - time_in_quantum), int(running.remaining_time), int(running.next_io)});
 
             // Advance time
             current_time += slice;
@@ -149,9 +148,7 @@ std::tuple<std::string /* add std::string for bonus mark */ > run_simulation(std
         }
 
         /////////////////////////////////////////////////////////////////
-        if (ready_queue.empty() && wait_queue.empty()) {
-            current_time++;  // advance time if nothing is ready
-        }
+
     }
     
     //Close the output table
