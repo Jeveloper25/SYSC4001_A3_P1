@@ -1,16 +1,31 @@
 +------------------------------------------------+
 |Time of Transition |PID | Old State | New State |
 +------------------------------------------------+
-|                 0 |  2 |       NEW |     READY |
-|                 0 |  2 |     READY |   RUNNING |
-|                 1 |  2 |   RUNNING |   WAITING |
-|                 0 |  1 |       NEW |     READY |
-|                 0 |  1 |     READY |   RUNNING |
 |                 0 |  0 |       NEW |     READY |
-|                 2 |  2 |   WAITING |     READY |
-|                 3 |  1 |   RUNNING |TERMINATED |
-|                 3 |  0 |     READY |   RUNNING |
-|                 6 |  0 |   RUNNING |TERMINATED |
-|                 6 |  2 |     READY |   RUNNING |
-|                 7 |  2 |   RUNNING |TERMINATED |
+|                 0 |  1 |       NEW |     READY |
+|                 0 |  2 |       NEW |     READY |
+|                 0 |  0 |     READY |   RUNNING |
+|               100 |  0 |   RUNNING |     READY |
+|               100 |  1 |     READY |   RUNNING |
+|               200 |  1 |   RUNNING |     READY |
+|               200 |  2 |     READY |   RUNNING |
+|               300 |  2 |   RUNNING |   WAITING |
+|               300 |  0 |     READY |   RUNNING |
+|               400 |  0 |   RUNNING |     READY |
+|               400 |  2 |   WAITING |     READY |
+|               400 |  1 |     READY |   RUNNING |
+|               500 |  1 |   RUNNING |     READY |
+|               500 |  0 |     READY |   RUNNING |
+|               600 |  0 |   RUNNING |   WAITING |
+|               600 |  2 |     READY |   RUNNING |
+|               700 |  2 |   RUNNING |TERMINATED |
+|               700 |  0 |   WAITING |     READY |
+|               700 |  1 |     READY |   RUNNING |
+|               800 |  1 |   RUNNING |     READY |
+|               800 |  0 |     READY |   RUNNING |
+|               900 |  0 |   RUNNING |TERMINATED |
+|               900 |  1 |     READY |   RUNNING |
+|              1000 |  1 |   RUNNING |     READY |
+|              1000 |  1 |     READY |   RUNNING |
+|              1100 |  1 |   RUNNING |TERMINATED |
 +------------------------------------------------+

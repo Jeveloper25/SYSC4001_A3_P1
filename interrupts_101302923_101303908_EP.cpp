@@ -125,7 +125,7 @@ run_simulation(std::vector<PCB> list_processes) {
     // Fast forward time to when the IO is complete if there are no ready
     // processes
     if (ready_queue.empty()) {
-      current_time += running.io_duration;
+      current_time = next_ready_time; 
     }
     // Move process to ready queue if IO has completed
     if (!wait_queue.empty() && wait_queue.back().ready_time == current_time) {

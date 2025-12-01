@@ -87,10 +87,11 @@ run_simulation(std::vector<PCB> list_processes) {
       // Fast forward to next arrival if there are no ready processes and the
       // waiting processes are further away
       if (ready_queue.empty() && !wait_queue.empty() &&
-          wait_queue.back().ready_time > next_arrival_time) {
+          wait_queue.back().ready_time > next_arrival_time &&
+          next_arrival_time > current_time) {
         current_time = next_arrival_time;
       }
-      if (process.arrival_time == current_time) {
+      if (process.arrival_time <= current_time) {
         // check if the AT = current time
         // if so, assign memory and put the process into the ready queue
         do {
@@ -124,7 +125,7 @@ run_simulation(std::vector<PCB> list_processes) {
     // Fast forward time to when the IO is complete if there are no ready
     // processes
     if (ready_queue.empty()) {
-      current_time += running.io_duration;
+      current_time = next_ready_time;
     }
     // Move process to ready queue if IO has completed
     if (!wait_queue.empty() && wait_queue.back().ready_time == current_time) {
@@ -157,9 +158,8 @@ run_simulation(std::vector<PCB> list_processes) {
       }
       // Check if new arrival must be processed before process
       // IO/termination/preemption
-      if ((next < running.next_io && next < running.remaining_time &&
-               next < QUANTUM ||
-           running.next_io == 0) &&
+      if (((next < running.next_io || running.next_io == 0) &&
+           next < running.remaining_time && next < QUANTUM) &&
           next > 0) {
         processing_other = true;
         current_time += next;
@@ -169,21 +169,22 @@ run_simulation(std::vector<PCB> list_processes) {
       }
       // Check if other process must be readied before process
       // IO/termination/preemption
-      if ((ready < running.next_io && ready < running.remaining_time &&
-               ready < QUANTUM ||
-           running.next_io == 0) &&
+      if (((ready < running.next_io || running.next_io == 0) &&
+           ready < running.remaining_time && ready < QUANTUM) &&
           ready > 0) {
         processing_other = true;
         current_time += ready;
         running.remaining_time -= ready;
-        running.next_io -= next;
+        running.next_io -= ready;
         continue;
       }
       // Check if preemption before process IO/termination
-      if (QUANTUM < running.next_io && QUANTUM < running.remaining_time) {
+      if ((QUANTUM < running.next_io || running.next_io == 0) &&
+          QUANTUM < running.remaining_time) {
         running.remaining_time -= QUANTUM;
         current_time += QUANTUM;
         running.next_io -= QUANTUM;
+        running.state = READY;
         ready_queue.push(running);
         execution_status +=
             print_exec_status(current_time, running.PID, RUNNING, READY);
