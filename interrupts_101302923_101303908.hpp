@@ -19,8 +19,10 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include <queue>
 
 #define QUANTUM 100
+
 
 // An enumeration of states to make assignment easier
 enum states { NEW, READY, RUNNING, WAITING, TERMINATED, NOT_ASSIGNED };
@@ -55,6 +57,12 @@ struct PCB {
   unsigned int priority;
   unsigned int ready_time; // Records the time process will exit waiting
   unsigned int next_io;    // Time until next IO
+};
+
+// Comparator for PQ
+class Compare {
+public:
+  bool operator()(PCB &a, PCB &b) { return a.priority >= b.priority; }
 };
 
 //------------------------------------HELPER FUNCTIONS FOR THE
@@ -293,6 +301,17 @@ void run_process(PCB &running, std::vector<PCB> &job_queue,
   running.state = RUNNING;
   sync_queue(job_queue, running);
 }
+
+// Overloaded to use queues
+void run_process(PCB &running, std::vector<PCB> &job_queue,
+                 std::priority_queue<PCB, std::vector<PCB>, Compare> &ready_queue, unsigned int current_time) {
+  running = ready_queue.top();
+  ready_queue.pop();
+  running.start_time = current_time;
+  running.state = RUNNING;
+  sync_queue(job_queue, running);
+}
+
 void idle_CPU(PCB &running) {
   running.start_time = 0;
   running.processing_time = 0;
