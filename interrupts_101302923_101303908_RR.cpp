@@ -43,10 +43,10 @@ run_simulation(std::vector<PCB> list_processes) {
 
   // Sort the processes based on arrival time,
   // makes handling new arrivals easier
-  std::sort(list_processes.begin(), list_processes.end(),
-            [](const PCB &first, const PCB &second) {
-              return (first.arrival_time > second.arrival_time);
-            });
+  stable_sort(list_processes.begin(), list_processes.end(),
+              [](const PCB &first, const PCB &second) {
+                return (first.arrival_time >= second.arrival_time);
+              });
 
   std::queue<PCB> ready_queue; // The ready queue of processes
   std::vector<PCB> wait_queue; // The wait queue of processes
@@ -93,15 +93,23 @@ run_simulation(std::vector<PCB> list_processes) {
       if (process.arrival_time == current_time) {
         // check if the AT = current time
         // if so, assign memory and put the process into the ready queue
-        if (assign_memory(process)) {
-          process.state = READY;       // Set the process state to READY
-          ready_queue.push(process);   // Add the process to the ready queue
-          job_list.push_back(process); // Add it to the list of processes
-          execution_status +=
-              print_exec_status(current_time, process.PID, NEW, READY);
-          std::cout << print_exec_status(current_time, process.PID, NEW, READY);
-          list_processes.pop_back();
-        }
+        do {
+          if (assign_memory(process)) {
+            process.state = READY;       // Set the process state to READY
+            ready_queue.push(process);   // Add the process to the ready queue
+            job_list.push_back(process); // Add it to the list of processes
+            execution_status +=
+                print_exec_status(current_time, process.PID, NEW, READY);
+            std::cout << print_exec_status(current_time, process.PID, NEW,
+                                           READY);
+            list_processes.pop_back();
+          } else {
+            break;
+          }
+          if (list_processes.empty())
+            break;
+          process = list_processes.back();
+        } while (process.arrival_time <= current_time);
       }
       // Record the time of the next arrival
       if (!list_processes.empty()) {

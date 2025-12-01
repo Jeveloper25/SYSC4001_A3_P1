@@ -42,9 +42,9 @@ run_simulation(std::vector<PCB> list_processes) {
 
   // Sort the processes based on arrival time,
   // makes handling new arrivals easier
-  std::sort(list_processes.begin(), list_processes.end(),
+  stable_sort(list_processes.begin(), list_processes.end(),
             [](const PCB &first, const PCB &second) {
-              return (first.arrival_time > second.arrival_time);
+              return (first.arrival_time >= second.arrival_time);
             });
 
   std::vector<PCB> ready_queue; // The ready queue of processes
@@ -83,24 +83,34 @@ run_simulation(std::vector<PCB> list_processes) {
     // Go through the list of proceeses
     if (!list_processes.empty()) {
       auto &process = list_processes.back();
+      // cout << process.PID << endl;
       // Fast forward to next arrival if there are no ready processes and the
       // waiting processes are further away
       if (ready_queue.empty() && !wait_queue.empty() &&
           wait_queue.back().ready_time > next_arrival_time) {
         current_time = next_arrival_time;
       }
-      if (process.arrival_time == current_time) {
+      if (process.arrival_time <= current_time) {
         // check if the AT = current time
         // if so, assign memory and put the process into the ready queue
-        if (assign_memory(process)) {
-          process.state = READY;          // Set the process state to READY
-          ready_queue.push_back(process); // Add the process to the ready queue
-          job_list.push_back(process);    // Add it to the list of processes
-          execution_status +=
-              print_exec_status(current_time, process.PID, NEW, READY);
-          std::cout << print_exec_status(current_time, process.PID, NEW, READY);
-          list_processes.pop_back();
-        }
+        do {
+          if (assign_memory(process)) {
+            process.state = READY; // Set the process state to READY
+            ready_queue.push_back(
+                process);                // Add the process to the ready queue
+            job_list.push_back(process); // Add it to the list of processes
+            execution_status +=
+                print_exec_status(current_time, process.PID, NEW, READY);
+            std::cout << print_exec_status(current_time, process.PID, NEW,
+                                           READY);
+            list_processes.pop_back();
+          } else {
+            break;
+          }
+          if (list_processes.empty())
+            break;
+          process = list_processes.back();
+        } while (process.arrival_time <= current_time);
       }
       // Record the time of the next arrival
       if (!list_processes.empty()) {
@@ -154,7 +164,7 @@ run_simulation(std::vector<PCB> list_processes) {
         processing_other = true;
         current_time += next;
         running.remaining_time -= next;
-				running.next_io -= next;
+        running.next_io -= next;
         continue;
       }
       // Check if other process must be readied before process IO/termination
@@ -164,7 +174,7 @@ run_simulation(std::vector<PCB> list_processes) {
         processing_other = true;
         current_time += ready;
         running.remaining_time -= ready;
-				running.next_io -= ready;
+        running.next_io -= ready;
         continue;
       }
       // Run the process until IO occurs
@@ -173,7 +183,7 @@ run_simulation(std::vector<PCB> list_processes) {
         current_time += running.next_io;
         running.state = WAITING;
         running.ready_time = current_time + running.io_duration;
-				running.next_io = running.io_freq;
+        running.next_io = running.io_freq;
         wait_queue.push_back(running);
         sort_wait(wait_queue);
         sync_queue(job_list, running);
